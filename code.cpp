@@ -1,194 +1,109 @@
 #include <iostream>
 #include <fstream>
-#include <random>
 #include <vector>
 #include <string>
-#include <algorithm>
-#include <queue>
 #include <climits>
+#include <random>
+#include <algorithm>
 
-bool createFileWithRandomNumbers(const std::string &fileName, int numbersCount, int maxNumberValue) {
-    std::ofstream outFile(fileName);
-    if (!outFile) return false;
-
-    std::mt19937 gen(std::random_device{}());
-    std::uniform_int_distribution<int> dist(0, maxNumberValue);
-
-    for (int i = 0; i < numbersCount; ++i)
-        outFile << dist(gen) << " ";
-
-    return true;
+void generateRandomNumbers(const std::string& fileName, int numbersCount, int maxNumberValue) {
+    std::ofstream file(fileName);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, maxNumberValue);
+    for (int i = 0; i < numbersCount; i++) {
+        file << dist(gen) << " ";
+    }
+    file.close();
 }
+
+void split(const std::string& filename, const std::string& fileSplit1, const std::string& fileSplit2) {
+    std::ifstream file(filename);
+    std::ofstream file_1(fileSplit1);
+    std::ofstream file_2(fileSplit2);
+
+    int value;
+    bool toggle = true;
+    while (file >> value) {
+        if (toggle) {
+            file_1 << value << " ";
+        } else {
+            file_2 << value << " ";
+        }
+        toggle = !toggle;
+    }
+}
+
+void merge(int p, std::ifstream inputFile[2], std::ofstream outputFile[2]) {
+    int mas[2];
+    bool hasData[2] = {false, false};
+    
+    if (inputFile[0] >> mas[0]) {
+        hasData[0] = true;
+    }
+    if (inputFile[1] >> mas[1]) {
+        hasData[1] = true;
+    }
+    
+    int n = 0;
+    while (hasData[0] || hasData[1]) {
+        int i = 0, j = 0;
+        while (hasData[0] && hasData[1] && i < p && j < p) {
+            if (mas[0] < mas[1]) {
+                outputFile[n] << mas[0] << " ";
+                if (!(inputFile[0] >> mas[0])) hasData[0] = false;
+                i++;
+            } else {
+                outputFile[n] << mas[1] << " ";
+                if (!(inputFile[1] >> mas[1])) hasData[1] = false;
+                j++;
+            }
+        }
+        while (hasData[0] && i < p) {
+            outputFile[n] << mas[0] << " ";
+            if (!(inputFile[0] >> mas[0])) hasData[0] = false;
+            i++;
+        }
+        while (hasData[1] && j < p) {
+            outputFile[n] << mas[1] << " ";
+            if (!(inputFile[1] >> mas[1])) hasData[1] = false;
+            j++;
+        }
+        n = 1 - n;
+    }
+}
+
+void fileSort(std::string& filename) 
 
 bool isFileContainsSortedArray(const std::string &fileName) {
     std::ifstream inFile(fileName);
-    if (!inFile) return false;
-
-    int prev, current;
-    if (!(inFile >> prev)) return true;
-
+    int value;
+    if (!(inFile >> value)) return true;
+    int prev = value;
+    int current;
     while (inFile >> current) {
         if (current < prev) return false;
         prev = current;
     }
-
     return true;
-}
-
-void sortFile(const std::string &fileName) {
-    std::ifstream inFile(fileName);
-    if (!inFile) return;
-
-    std::vector<int> numbers;
-    int num;
-    while (inFile >> num) {
-        numbers.push_back(num);
-    }
-
-    std::sort(numbers.begin(), numbers.end());
-
-    std::ofstream outFile(fileName);
-    for (int n : numbers) {
-        outFile << n << " ";
-    }
-}
-
-int createAndSortFile(const std::string &fileName, int numbersCount, int maxNumberValue) {
-    if (!createFileWithRandomNumbers(fileName, numbersCount, maxNumberValue)) {
-        return -1;
-    }
-
-    sortFile(fileName);
-
-    if (!isFileContainsSortedArray(fileName)) {
-        return -2;
-    }
-
-    return 1;
 }
 
 void printFileContent(const std::string &fileName) {
     std::ifstream inFile(fileName);
-    if (!inFile) {
-        std::cout << "cant open yr file" << std::endl;
-        return;
-    }
-
-    int num;
-    while (inFile >> num) {
-        std::cout << num << " ";
+    int value;
+    while (inFile >> value) {
+        std::cout << value << " ";
     }
     std::cout << std::endl;
-}
-
-void mergeFiles(const std::vector<std::string>& files) {
-    std::vector<std::ifstream> inFiles;
-    for (const auto& file : files) {
-        inFiles.push_back(std::ifstream(file));
-    }
-
-    std::ofstream outFile("merged.txt");
-
-    std::vector<int> currentValues(files.size());
-    bool hasValues = false;
-
-    for (size_t i = 0; i < files.size(); ++i) {
-        if (inFiles[i] >> currentValues[i]) {
-            hasValues = true;
-        } else {
-            currentValues[i] = INT_MAX; 
-        }
-    }
-
-    while (hasValues) {
-        int minValue = INT_MAX;
-        int minIndex = -1;
-
-        for (size_t i = 0; i < currentValues.size(); ++i) {
-            if (currentValues[i] < minValue) {
-                minValue = currentValues[i];
-                minIndex = i;
-            }
-        }
-
-        outFile << minValue << " ";
-
-        if (!(inFiles[minIndex] >> currentValues[minIndex])) {
-            currentValues[minIndex] = INT_MAX; 
-        }
-
-        hasValues = false;
-        for (size_t i = 0; i < currentValues.size(); ++i) {
-            if (currentValues[i] != INT_MAX) {
-                hasValues = true;
-                break;
-            }
-        }
-    }
-
-    for (auto& inFile : inFiles) {
-        inFile.close();
-    }
-}
-
-void fileSort(const std::string &fileName) {
-    std::ifstream inFile(fileName);
-    if (!inFile) return;
-
-    std::vector<int> numbers;
-    int num;
-    while (inFile >> num) {
-        numbers.push_back(num);
-    }
-
-    int partSize = numbers.size() / 4;
-    std::vector<std::string> fileParts(4);
-
-    for (int i = 0; i < 4; ++i) {
-        fileParts[i] = "part" + std::to_string(i) + ".txt";
-        std::ofstream outFile(fileParts[i]);
-
-        int start = i * partSize;
-        int end = (i == 3) ? numbers.size() : (i + 1) * partSize;
-
-        for (int j = start; j < end; ++j) {
-            outFile << numbers[j] << " ";
-        }
-    }
-
-    for (auto& part : fileParts) {
-        sortFile(part);
-    }
-
-    mergeFiles(fileParts);
 }
 
 int main() {
     std::string fileName = "file.txt";
     int numbersCount = 1000000;
     int maxNumberValue = 100000;
+    
+    generateRandomNumbers(fileName, numbersCount, maxNumberValue);
 
-    for (int i = 0; i < 10; i++) {
-        int result = createAndSortFile(fileName, numbersCount, maxNumberValue);
-        if (result == 1) {
-            std::cout << "Test passed." << std::endl;
-
-        } else if (result == -1) {
-            std::cout << "Test failed: can't create file." << std::endl;
-            printFileContent(fileName);
-
-        } else if (result == -2) {
-            std::cout << "Test failed: file isn't sorted." << std::endl;
-            printFileContent(fileName);
-        }
-    }
-
-    fileSort(fileName); 
-    //std::cout << "File after merge and sorting: ";
-    //printFileContent("merged.txt");
-
+    fileSort(fileName);
     return 0;
-}
-
-//sortFile и fileSort выполняют разные функции(sF сортирует каждый файл отдельно и те который получаются в результате работы fS)
-//fS выполняет естественную сортировку слиянием на 4х файлах
+} 
