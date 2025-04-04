@@ -31,19 +31,15 @@ bool createFileWithRandomNumbers(const std::string &fileName, const int numbersC
 
 bool isFileContainsSortedArray(const std::string &fileName) {
     int valueNow = 0, valuePrev = INT_MIN;
-    std::string ch;
     std::ifstream file(fileName);
-    while (!file.eof()) {
-        ch = "";
-        file >> ch;
-        if (ch != "") {
-            valueNow = std::stoi(ch);
-            if (valueNow < valuePrev)
-                return false;
-            valuePrev = valueNow;
-        }
+    
+    while (file >> valueNow) {
+        if (valueNow < valuePrev)
+            return false;
+        valuePrev = valueNow;
     }
-    return true;
+    
+    return file.eof(); 
 }
 
 void split(const std::string &filename, const std::string &fileSplit1, const std::string &fileSplit2) {
@@ -54,10 +50,10 @@ void split(const std::string &filename, const std::string &fileSplit1, const std
     int value;
     file >> value;
 
-    while (!file.eof()) {
+    while (file.good()) {
         file_1 << value << " ";
         file >> value;
-        if (!file.eof()) {
+        if (file.good()) {
             file_2 << value << " ";
             file >> value;
         }
@@ -69,15 +65,15 @@ void split(const std::string &filename, const std::string &fileSplit1, const std
 }
 
 void Merge(const int p, std::ifstream *inputFile, std::ofstream *outputFile) {
-    int *mas = new int[2];
+    int mas[2]; 
 
     inputFile[0] >> mas[0];
     inputFile[1] >> mas[1];
     int n = 0;
 
-    while (!inputFile[0].eof() && !inputFile[1].eof()) {
+    while (inputFile[0].good() && inputFile[1].good()) {
         int i = 0, j = 0;
-        while (!inputFile[0].eof() && !inputFile[1].eof() && i < p && j < p) {
+        while (inputFile[0].good() && inputFile[1].good() && i < p && j < p) {
             if (mas[0] < mas[1]) {
                 outputFile[n] << mas[0] << " ";
                 inputFile[0] >> mas[0];
@@ -88,12 +84,12 @@ void Merge(const int p, std::ifstream *inputFile, std::ofstream *outputFile) {
                 j++;
             }
         }
-        while (!inputFile[0].eof() && i < p) {
+        while (inputFile[0].good() && i < p) {
             outputFile[n] << mas[0] << " ";
             inputFile[0] >> mas[0];
             i++;
         }
-        while (!inputFile[1].eof() && j < p) {
+        while (inputFile[1].good() && j < p) {
             outputFile[n] << mas[1] << " ";
             inputFile[1] >> mas[1];
             j++;
@@ -101,16 +97,14 @@ void Merge(const int p, std::ifstream *inputFile, std::ofstream *outputFile) {
         n = 1 - n;
     }
 
-    while (!inputFile[0].eof()) {
+    while (inputFile[0].good()) {
         outputFile[n] << mas[0] << " ";
         inputFile[0] >> mas[0];
     }
-    while (!inputFile[1].eof()) {
+    while (inputFile[1].good()) {
         outputFile[n] << mas[1] << " ";
         inputFile[1] >> mas[1];
     }
-
-    delete[] mas;
 }
 
 void fileSort(const std::string &inputFileName, const std::string &outputFileName) {
@@ -121,42 +115,48 @@ void fileSort(const std::string &inputFileName, const std::string &outputFileNam
 
     split(inputFileName, file_0, file_1);
     int p = 1;
+    bool sorted = false;
 
-    while (true) {
-        std::ifstream inputFile[2];
-        std::ofstream outputFile[2];
+    while (!sorted) {
+        {
+            std::ifstream inputFile[2];
+            std::ofstream outputFile[2];
 
-        inputFile[0].open(file_0);
-        inputFile[1].open(file_1);
-        outputFile[0].open(file_2);
-        outputFile[1].open(file_3);
+            inputFile[0].open(file_0);
+            inputFile[1].open(file_1);
+            outputFile[0].open(file_2);
+            outputFile[1].open(file_3);
 
-        Merge(p, inputFile, outputFile);
+            Merge(p, inputFile, outputFile);
 
-        inputFile[0].close();
-        inputFile[1].close();
-        outputFile[0].close();
-        outputFile[1].close();
+            inputFile[0].close();
+            inputFile[1].close();
+            outputFile[0].close();
+            outputFile[1].close();
 
-        if (isFileContainsSortedArray(file_2) && isFileContainsSortedArray(file_3)) {
-            break;
+            sorted = isFileContainsSortedArray(file_2) && isFileContainsSortedArray(file_3);
         }
 
-        p *= 2;
+        if (!sorted) {
+            p *= 2;
+            
+            std::ifstream inputFile[2];
+            std::ofstream outputFile[2];
 
-        inputFile[0].open(file_2);
-        inputFile[1].open(file_3);
-        outputFile[0].open(file_0);
-        outputFile[1].open(file_1);
+            inputFile[0].open(file_2);
+            inputFile[1].open(file_3);
+            outputFile[0].open(file_0);
+            outputFile[1].open(file_1);
 
-        Merge(p, inputFile, outputFile);
+            Merge(p, inputFile, outputFile);
 
-        inputFile[0].close();
-        inputFile[1].close();
-        outputFile[0].close();
-        outputFile[1].close();
+            inputFile[0].close();
+            inputFile[1].close();
+            outputFile[0].close();
+            outputFile[1].close();
 
-        p *= 2;
+            p *= 2;
+        }
     }
 
     std::ofstream outputFile(outputFileName);
@@ -187,8 +187,9 @@ int main() {
     if (isFileContainsSortedArray(outputFileName)) {
         std::cout << " sorted correctly: " << outputFileName << std::endl;
     } else {
-        std::cerr << " sorted uncorrectly!" << std::endl;
+        std::cerr << " sorted uncorrectly" << std::endl;
     }
 
     return 0;
 }
+
