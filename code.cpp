@@ -112,48 +112,28 @@ void fileSort(const std::string &inputFileName, const std::string &outputFileNam
     std::string file_1 = "file_1.txt";
     std::string file_2 = "file_2.txt";
     std::string file_3 = "file_3.txt";
-
-    split(inputFileName, file_0, file_1);
-    int p = 1;
     bool sorted = false;
+    int p = 1;
+
+    split(inputFileName, file_0,file_1);
 
     while (!sorted) {
         {
-            std::ifstream inputFile[2];
-            std::ofstream outputFile[2];
-
-            inputFile[0].open(file_0);
-            inputFile[1].open(file_1);
-            outputFile[0].open(file_2);
-            outputFile[1].open(file_3);
+            std::ifstream inputFile[2] = {std::ifstream(file_0), std::ifstream(file_1)};
+            std::ofstream outputFile[2] = {std::ofstream(file_2), std::ofstream(file_3)};
 
             Merge(p, inputFile, outputFile);
-
-            inputFile[0].close();
-            inputFile[1].close();
-            outputFile[0].close();
-            outputFile[1].close();
-
-            sorted = isFileContainsSortedArray(file_2) && isFileContainsSortedArray(file_3);
         }
+
+        sorted = isFileContainsSortedArray(file_2) && isFileContainsSortedArray(file_3);
 
         if (!sorted) {
             p *= 2;
             
-            std::ifstream inputFile[2];
-            std::ofstream outputFile[2];
-
-            inputFile[0].open(file_2);
-            inputFile[1].open(file_3);
-            outputFile[0].open(file_0);
-            outputFile[1].open(file_1);
+            std::ifstream inputFile[2] = {std::ifstream(file_2), std::ifstream(file_3)};
+            std::ofstream outputFile[2] = {std::ofstream(file_0), std::ofstream(file_1)};
 
             Merge(p, inputFile, outputFile);
-
-            inputFile[0].close();
-            inputFile[1].close();
-            outputFile[0].close();
-            outputFile[1].close();
 
             p *= 2;
         }
@@ -168,6 +148,7 @@ void fileSort(const std::string &inputFileName, const std::string &outputFileNam
     finalFile.close();
     outputFile.close();
 }
+
 
 int main() {
     std::string inputFileName = "random_numbers.txt";
@@ -192,4 +173,3 @@ int main() {
 
     return 0;
 }
-
