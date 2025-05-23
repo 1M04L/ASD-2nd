@@ -112,12 +112,11 @@ void fileSort(const std::string &inputFileName, const std::string &outputFileNam
     std::string file_1 = "file_1.txt";
     std::string file_2 = "file_2.txt";
     std::string file_3 = "file_3.txt";
-    bool sorted = false;
     int p = 1;
 
-    split(inputFileName, file_0,file_1);
+    split(inputFileName, file_0, file_1);
 
-    while (!sorted) {
+    while (true) {
         {
             std::ifstream inputFile[2] = {std::ifstream(file_0), std::ifstream(file_1)};
             std::ofstream outputFile[2] = {std::ofstream(file_2), std::ofstream(file_3)};
@@ -125,28 +124,26 @@ void fileSort(const std::string &inputFileName, const std::string &outputFileNam
             Merge(p, inputFile, outputFile);
         }
 
-        sorted = isFileContainsSortedArray(file_2) && isFileContainsSortedArray(file_3);
+        if (isFileContainsSortedArray(file_2)) {
+            std::ofstream outputFile(outputFileName);
+            std::ifstream finalFile(file_2);
+            int value;
+            while (finalFile >> value) {
+                outputFile << value << " ";
+            }
+            break;
+        }
 
-        if (!sorted) {
-            p *= 2;
-            
+        p *= 2;
+        {
             std::ifstream inputFile[2] = {std::ifstream(file_2), std::ifstream(file_3)};
             std::ofstream outputFile[2] = {std::ofstream(file_0), std::ofstream(file_1)};
 
             Merge(p, inputFile, outputFile);
-
-            p *= 2;
         }
-    }
 
-    std::ofstream outputFile(outputFileName);
-    std::ifstream finalFile(file_2);
-    int value;
-    while (finalFile >> value) {
-        outputFile << value << " ";
+        p *= 2;
     }
-    finalFile.close();
-    outputFile.close();
 }
 
 
